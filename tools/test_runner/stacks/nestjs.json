@@ -1,0 +1,10 @@
+{
+  "stack": "nestjs",
+  "name": "NestJS Node.js TypeScript",
+  "detection_files": ["package.json"],
+  "detection_keywords": ["\"@nestjs/core\"", "\"@nestjs/common\""],
+  "image": "node:22-alpine",
+  "test_cmd": "(npm ci --prefer-offline || npm install) && (if grep -q 'test:cov' package.json; then npm run test:cov; else npm test; fi)",
+  "lint_cmd": "(npm ci --prefer-offline || npm install) && (if grep -q '\"lint\":' package.json; then npm run lint; fi) && npx tsc --noEmit",
+  "cache_path": "/root/.npm"
+}

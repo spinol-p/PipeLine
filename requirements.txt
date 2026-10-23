@@ -1,0 +1,4 @@
+# Dependencias del orquestador (Python >= 3.11). Las herramientas de análisis corren en contenedores Docker.
+pydantic>=2.6,<3
+PyYAML>=6.0,<7
+mcp>=2.2,<3

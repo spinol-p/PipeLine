@@ -1,0 +1,8 @@
+{
+  "stack": "node",
+  "detection_files": ["package.json"],
+  "image": "node:22-alpine",
+  "test_cmd": "(npm ci --prefer-offline || npm install) && npm test",
+  "lint_cmd": "(npm ci --prefer-offline || npm install) && (if grep -q '\"lint\":' package.json; then npm run lint; fi) && npx tsc --noEmit",
+  "cache_path": "/root/.npm"
+}

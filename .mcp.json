@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "review-orchestrator": {
+      "command": "python",
+      "args": ["-m", "orchestrator.mcp_server"]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+# Entorno Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Resultados de corridas efímeras (informes generados por cada revisión)
+runs/
+.review/
+
+# Cachés de dependencias por stack (se regeneran en la primera corrida)
+review-cache-*/
+
+# Base de vulnerabilidades de Trivy (~1,4 GB, se descarga sola)
+review-trivy-db/
+
+# Caches locales de pruebas
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Bitácora interna de correcciones del desarrollo (no forma parte de la herramienta)
+CORRECCIONES_PIPELINE.md
+
+# Configuración local y secretos
+.env
+*.local.yaml
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configuración local de cada equipo (usar projects.example.yaml y .mcp.json)
+projects.yaml
+mcp_config.json

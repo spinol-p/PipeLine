@@ -1,0 +1,16 @@
+# Copia este archivo como projects.yaml y registra tus servicios.
+# projects.yaml no se versiona: contiene rutas propias de cada equipo.
+projects:
+  mi-servicio-python:
+    path: C:/ruta/a/mi-servicio-python     # ruta absoluta al servicio (Windows o Linux/macOS)
+    stack: python                          # opcional: si se omite se detecta automáticamente
+    default_mode: quick
+    base: main
+
+  mi-api-java:
+    path: /home/usuario/proyectos/mi-api-java
+    stack: java_springboot
+    default_mode: quick
+    base: main
+    openapi_file: contracts/v1/mi_api.yaml # opcional: contrato OpenAPI a validar
+    coverage_min: 70                       # opcional: solo puede endurecer el mínimo de policy.yaml

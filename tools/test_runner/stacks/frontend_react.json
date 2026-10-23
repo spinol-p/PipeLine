@@ -1,0 +1,10 @@
+{
+  "stack": "frontend_react",
+  "name": "Frontend React (Vite / Next.js)",
+  "detection_files": ["package.json"],
+  "detection_keywords": ["\"react\"", "\"react-dom\""],
+  "image": "node:22-alpine",
+  "test_cmd": "if grep -q 'vitest' package.json; then npx vitest run; else npm test -- --watchAll=false; fi",
+  "lint_cmd": "(npm ci --prefer-offline || npm install) && (if grep -q '\"lint\":' package.json; then npm run lint; fi) && npx tsc --noEmit",
+  "cache_path": "/root/.npm"
+}

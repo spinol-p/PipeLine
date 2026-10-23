@@ -1,0 +1,34 @@
+version: 1
+stages:
+  secrets:
+    block_on: any
+  lint:
+    block_on: fail
+  sast:
+    block_on: high
+  deps:
+    block_on: high
+    only_fixable: true
+    licenses_denied:
+      - AGPL-3.0
+      - SSPL-1.0
+  dockerfile:
+    block_on: error
+  contracts:
+    block_on: fail
+    breaking_changes: block
+  test:
+    block_on: fail
+    coverage_min: 60
+    require_tests: true
+  image-scan:
+    block_on: critical
+    only_fixable: true
+    forbid_root: true
+  api-conformance:
+    block_on: fail
+  smoke:
+    block_on: fail
+
+on_stage_error: block        # una etapa que no pudo correr rechaza la corrida
+on_missing_stage: block      # una etapa esperada sin reporte rechaza la corrida

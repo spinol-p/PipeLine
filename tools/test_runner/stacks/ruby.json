@@ -1,0 +1,10 @@
+{
+  "stack": "ruby",
+  "name": "Ruby / Rails",
+  "detection_files": ["Gemfile"],
+  "detection_keywords": ["rails", "sinatra", "rspec"],
+  "image": "ruby:3.3",
+  "test_cmd": "(bundle check || bundle install --jobs 4) && bundle exec rspec",
+  "lint_cmd": "(bundle check || bundle install --jobs 4) && bundle exec rubocop",
+  "cache_path": "/usr/local/bundle"
+}

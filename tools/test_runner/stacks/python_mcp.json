@@ -1,0 +1,19 @@
+{
+  "stack": "python_mcp",
+  "name": "Python MCP / FastMCP / FastAPI Service",
+  "detection_files": [
+    "pyproject.toml",
+    "requirements.txt"
+  ],
+  "detection_keywords": [
+    "mcp",
+    "fastmcp",
+    "fastapi"
+  ],
+  "image": "python:3.12-slim",
+  "image_env": "IMG_PYTHON_STACK",
+  "image_from": "python-version",
+  "cache_path": "/root/.cache/pip",
+  "test_cmd": "set -e; if [ -f requirements.txt ]; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -r requirements.txt; fi; for f in requirements-dev.txt requirements-test.txt; do if [ -f $f ]; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -r $f; fi; done; if [ -f pyproject.toml ] && grep -qE '^\\[(project|tool\\.poetry)\\]' pyproject.toml; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -e . || python -m pip install -q --disable-pip-version-check --root-user-action=ignore .; fi; python -m pip install -q --disable-pip-version-check --root-user-action=ignore pytest==8.3.4 pytest-cov==6.0.0 pytest-asyncio==0.24.0; if [ ! -f .coveragerc ] && ! grep -q '^\\[tool\\.coverage' pyproject.toml 2>/dev/null && ! grep -q '^\\[coverage:' setup.cfg 2>/dev/null; then printf '[run]\\nbranch = True\\nomit =\\n    tests/*\\n    */tests/*\\n    test_*.py\\n    *_test.py\\n    conftest.py\\n    .venv/*\\n    venv/*\\n' > .coveragerc; echo '=== COBERTURA: CONFIGURACION BASE DEL PIPELINE ==='; fi; set +e; python -m pytest -q -rfE -p no:cacheprovider --junitxml=/out/junit.xml --cov=. --cov-report=term --cov-report=json:/out/coverage.json; EC=$?; if [ $EC -eq 5 ]; then echo '=== PYTEST: NO SE ENCONTRARON PRUEBAS ==='; fi; exit $EC",
+  "lint_cmd": "set -e; python -m pip install -q --disable-pip-version-check --root-user-action=ignore ruff==0.8.4; if [ -f ruff.toml ] || [ -f .ruff.toml ] || grep -q '^\\[tool\\.ruff' pyproject.toml 2>/dev/null; then CFG=''; echo '=== RUFF: CONFIGURACION DEL PROYECTO ==='; else CFG='--config /rules/python/ruff.toml'; echo '=== RUFF: CONFIGURACION BASE DEL PIPELINE ==='; fi; set +e; ruff check $CFG --no-cache --output-format=concise .; R1=$?; echo '=== RUFF FORMAT ==='; ruff format $CFG --no-cache --check .; R2=$?; R3=0; if [ -f mypy.ini ] || [ -f .mypy.ini ] || grep -q '^\\[tool\\.mypy' pyproject.toml 2>/dev/null || grep -q '^\\[mypy' setup.cfg 2>/dev/null; then echo '=== MYPY ==='; set -e; if [ -f requirements.txt ]; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -r requirements.txt; fi; for f in requirements-dev.txt requirements-test.txt; do if [ -f $f ]; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -r $f; fi; done; if [ -f pyproject.toml ] && grep -qE '^\\[(project|tool\\.poetry)\\]' pyproject.toml; then python -m pip install -q --disable-pip-version-check --root-user-action=ignore -e . || python -m pip install -q --disable-pip-version-check --root-user-action=ignore .; fi; python -m pip install -q --disable-pip-version-check --root-user-action=ignore mypy==1.13.0; set +e; mypy --show-column-numbers --no-color-output --no-error-summary --no-pretty .; R3=$?; fi; [ $R1 -eq 0 ] && [ $R2 -eq 0 ] && [ $R3 -eq 0 ]"
+}

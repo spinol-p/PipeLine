@@ -1,0 +1,4 @@
+# Finales de línea LF: reglas y configuraciones se montan en contenedores Linux
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf

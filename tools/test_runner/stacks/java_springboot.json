@@ -1,0 +1,10 @@
+{
+  "stack": "java_springboot",
+  "name": "Java Spring Boot",
+  "detection_files": ["pom.xml", "build.gradle", "build.gradle.kts"],
+  "detection_keywords": ["spring-boot", "org.springframework.boot"],
+  "image": "eclipse-temurin:21-jdk",
+  "test_cmd": "if [ -f ./mvnw ]; then ./mvnw -B test; elif [ -f pom.xml ]; then mvn -B test; elif [ -f ./gradlew ]; then ./gradlew test; else gradle test; fi",
+  "lint_cmd": "if [ -f ./mvnw ]; then ./mvnw -B spotless:check; elif [ -f pom.xml ]; then mvn -B spotless:check; elif [ -f ./gradlew ]; then ./gradlew check -x test; else gradle check -x test; fi",
+  "cache_path": "/root/.m2"
+}

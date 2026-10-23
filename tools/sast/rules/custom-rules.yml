@@ -1,0 +1,320 @@
+rules:
+  # =========================================================================
+  # 1. Reglas Generales y Cross-Stack
+  # =========================================================================
+  - id: generic-sql-injection-concatenation
+    message: "Posible inyección SQL detectada por concatenación directa de cadenas en consultas a base de datos. Utilice consultas parametrizadas o un ORM seguro."
+    severity: ERROR
+    languages: [javascript, typescript, java, ruby]
+    pattern-either:
+      - pattern: '$DB.query("..." + $VAR + "...")'
+      - pattern: '$DB.execute("..." + $VAR + "...")'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+
+  - id: python-sql-injection-concatenation
+    message: "Posible inyección SQL detectada por f-strings o concatenación en consultas a base de datos en Python. Utilice consultas parametrizadas."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: '$DB.query(f"...{$VAR}...")'
+      - pattern: '$DB.execute(f"...{$VAR}...")'
+      - pattern: '$DB.query("..." + $VAR + "...")'
+      - pattern: '$DB.execute("..." + $VAR + "...")'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+
+  - id: dangerous-eval-usage
+    message: "El uso de 'eval' o ejecución dinámica de código permite ejecución remota arbitraria (RCE). Evite evaluar entradas dinámicas."
+    severity: ERROR
+    languages: [javascript, typescript, python, ruby]
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+    metadata:
+      cwe: "CWE-95: Eval Injection"
+      owasp: "A03:2021 - Injection"
+
+  # =========================================================================
+  # 2. Java Spring Boot
+  # =========================================================================
+  - id: java-spring-jpa-sqli
+    message: "Inyección SQL/JPQL en Spring Boot: Creación de consulta con concatenación de cadenas en EntityManager. Utilice parámetros con nombre (:param) o Criteria API."
+    severity: ERROR
+    languages: [java]
+    pattern-either:
+      - pattern: '$EM.createQuery("..." + $VAR + "...")'
+      - pattern: '$EM.createNativeQuery("..." + $VAR + "...")'
+      - pattern: '$EM.createQuery(String.format("...", $VAR))'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      framework: "Spring Boot"
+
+  - id: java-spring-cors-wildcard
+    message: "Configuración de CORS permisiva (@CrossOrigin(\"*\")). Permite a cualquier dominio externo realizar peticiones autenticadas. Especifique los orígenes de confianza."
+    severity: WARNING
+    languages: [java]
+    pattern-either:
+      - pattern: '@CrossOrigin("*")'
+      - pattern: '@CrossOrigin(origins = "*")'
+    metadata:
+      cwe: "CWE-942: Overly Permissive CORS"
+      framework: "Spring Boot"
+
+  # =========================================================================
+  # 3. Ruby / Rails
+  # =========================================================================
+  - id: ruby-activerecord-sqli
+    message: "Inyección SQL en ActiveRecord: Interpolación de cadenas dentro de métodos de consulta (where/find_by_sql). Utilice placeholders tipo hash o interrogación: where(name: val) o where('name = ?', val)."
+    severity: ERROR
+    languages: [ruby]
+    pattern-either:
+      - pattern: '$MODEL.where("... #{$VAR} ...")'
+      - pattern: '$MODEL.find_by_sql("... #{$VAR} ...")'
+      - pattern: '$MODEL.order("... #{$VAR} ...")'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      framework: "Ruby on Rails"
+
+  - id: ruby-command-injection
+    message: "Posible inyección de comandos en Ruby: Invocación de shell con entrada interpolada (system, exec o backticks). Utilice arrays de argumentos sin pasar por el shell."
+    severity: ERROR
+    languages: [ruby]
+    pattern-either:
+      - pattern: 'system("... #{$VAR} ...")'
+      - pattern: '`... #{$VAR} ...`'
+    metadata:
+      cwe: "CWE-78: Command Injection"
+      framework: "Ruby"
+
+  # =========================================================================
+  # 4. Go (Golang)
+  # =========================================================================
+  - id: go-sql-injection-sprintf
+    message: "Inyección SQL en Go: Construcción de consulta con fmt.Sprintf o concatenación. Utilice placeholders ($1, ?) provistos por el driver de base de datos."
+    severity: ERROR
+    languages: [go]
+    pattern-either:
+      - pattern: '$DB.Query(fmt.Sprintf("...", ...))'
+      - pattern: '$DB.QueryRow(fmt.Sprintf("...", ...))'
+      - pattern: '$DB.Exec(fmt.Sprintf("...", ...))'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      framework: "Go database/sql"
+
+  - id: go-command-injection-shell
+    message: "Invocación de subshell en Go con 'sh -c'. Prefiera invocar el binario directamente con sus argumentos por separado en exec.Command(binary, arg1, arg2)."
+    severity: WARNING
+    languages: [go]
+    pattern-either:
+      - pattern: 'exec.Command("sh", "-c", $CMD)'
+      - pattern: 'exec.Command("bash", "-c", $CMD)'
+    metadata:
+      cwe: "CWE-78: Command Injection"
+      framework: "Go os/exec"
+
+  # =========================================================================
+  # 5. Python MCP (Model Context Protocol) & FastAPI
+  # =========================================================================
+  - id: python-mcp-unsafe-tool-exec
+    message: "Ejecución peligrosa de comandos en herramienta MCP: Uso de subprocess con shell=True en un tool expuesto al modelo. Permite inyección de comandos arbitrarios."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'subprocess.run(..., shell=True, ...)'
+      - pattern: 'subprocess.Popen(..., shell=True, ...)'
+      - pattern: 'os.system(...)'
+    metadata:
+      cwe: "CWE-78: Command Injection"
+      framework: "Python MCP / FastMCP"
+
+  - id: python-mcp-path-traversal
+    message: "Acceso a sistema de archivos sin sanitizar en herramienta MCP. Verifique que la ruta resuelta se encuentre estrictamente dentro del directorio permitido usando path.resolve()."
+    severity: WARNING
+    languages: [python]
+    pattern-either:
+      - pattern: 'open(os.path.join(..., $INPUT), ...)'
+      - pattern: 'Path(... / $INPUT).read_text(...)'
+    metadata:
+      cwe: "CWE-22: Path Traversal"
+      framework: "Python MCP"
+
+  # =========================================================================
+  # 6. Frontend React
+  # =========================================================================
+  - id: react-dangerouslysetinnerhtml
+    message: "Riesgo de XSS en React: Uso de 'dangerouslySetInnerHTML'. Si el contenido proviene de entradas externas o APIs, sanitice primero con DOMPurify."
+    severity: ERROR
+    languages: [javascript, typescript]
+    pattern: '<$EL ... dangerouslySetInnerHTML={{ __html: $VAL }} ... />'
+    metadata:
+      cwe: "CWE-79: Cross-site Scripting (XSS)"
+      framework: "React"
+
+  - id: react-hardcoded-secret
+    message: "Exposición de clave secreta en código Frontend React. Cualquier variable en el bundle del cliente es visible para el usuario final."
+    severity: ERROR
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: 'const $KEY = "sk_live_..."'
+      - pattern: 'const $KEY = "ghp_..."'
+      - pattern: 'const $KEY = "AKIA[0-9A-Z]{16}"'
+    metadata:
+      cwe: "CWE-798: Hardcoded Credentials"
+      framework: "React"
+
+  # =========================================================================
+  # 7. NestJS Node.js TypeScript
+  # =========================================================================
+  - id: nestjs-raw-sql-query
+    message: "Inyección SQL en NestJS: Uso de consultas directas sin parametrizar en TypeORM / Prisma. Utilice query builder con parámetros seguros (:param) o métodos de repositorio tipados."
+    severity: ERROR
+    languages: [typescript]
+    pattern-either:
+      - pattern: '$REPO.query("..." + $INPUT + "...")'
+      - pattern: '$REPO.query(`...${$INPUT}...`)'
+      - pattern: '$PRISMA.$queryRawUnsafe(`...${$INPUT}...`)'
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      framework: "NestJS"
+
+  - id: nestjs-insecure-guard-bypass
+    message: "Controlador NestJS sin guard de autenticación en endpoint sensible. Asegúrese de aplicar @UseGuards(AuthGuard) o el guard correspondiente."
+    severity: WARNING
+    languages: [typescript]
+    # El hallazgo se ancla en el metodo de la ruta sensible (@Delete). No dispara si hay @UseGuards(...)
+    # en la clase (en cualquier orden respecto de @Controller) o en el propio metodo.
+    # Limite conocido: un guard global (APP_GUARD / useGlobalGuards) no es visible para un analisis por archivo.
+    patterns:
+      - pattern-inside: |
+          @Controller(...)
+          class $CLASS {
+            ...
+          }
+      - pattern-not-inside: |
+          @UseGuards(...)
+          class $CLASS {
+            ...
+          }
+      - pattern: |
+          @Delete(...)
+          $METHOD(...) { ... }
+      - pattern-not: |
+          @UseGuards(...)
+          $METHOD(...) { ... }
+    metadata:
+      cwe: "CWE-285: Improper Authorization"
+      framework: "NestJS"
+
+  # =========================================================================
+  # 8. Python (general: scripts, servicios, Django, Flask, FastAPI)
+  # =========================================================================
+  - id: python-subprocess-shell-true
+    message: "Ejecución de comandos con shell=True. Si algún argumento proviene de una entrada externa permite inyección de comandos. Pase la orden como lista de argumentos y sin shell."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'subprocess.call(..., shell=True, ...)'
+      - pattern: 'subprocess.check_call(..., shell=True, ...)'
+      - pattern: 'subprocess.check_output(..., shell=True, ...)'
+      - pattern: 'subprocess.getoutput(...)'
+      - pattern: 'subprocess.getstatusoutput(...)'
+      - pattern: 'os.popen(...)'
+    metadata:
+      cwe: "CWE-78: Command Injection"
+      owasp: "A03:2021 - Injection"
+
+  - id: python-unsafe-deserialization
+    message: "Deserialización insegura: pickle, marshal o yaml.load sin SafeLoader ejecutan código arbitrario si el contenido no es de confianza. Use json o yaml.safe_load."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'pickle.loads(...)'
+      - pattern: 'pickle.load(...)'
+      - pattern: 'marshal.loads(...)'
+      - pattern: 'yaml.unsafe_load(...)'
+      - patterns:
+          - pattern: 'yaml.load(...)'
+          - pattern-not: 'yaml.load(..., Loader=yaml.SafeLoader, ...)'
+          - pattern-not: 'yaml.load(..., Loader=yaml.CSafeLoader, ...)'
+          - pattern-not: 'yaml.load(..., Loader=SafeLoader, ...)'
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+
+  - id: python-tls-verification-disabled
+    message: "Verificación de certificados TLS desactivada (verify=False). Expone la comunicación a ataques de intermediario. Configure el certificado de la CA en lugar de desactivar la verificación."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'requests.$METHOD(..., verify=False, ...)'
+      - pattern: 'httpx.$METHOD(..., verify=False, ...)'
+      - pattern: 'httpx.Client(..., verify=False, ...)'
+      - pattern: 'httpx.AsyncClient(..., verify=False, ...)'
+      - pattern: 'ssl._create_unverified_context(...)'
+    metadata:
+      cwe: "CWE-295: Improper Certificate Validation"
+      owasp: "A02:2021 - Cryptographic Failures"
+
+  - id: python-jwt-signature-not-verified
+    message: "Token JWT decodificado sin verificar la firma. Cualquiera puede fabricar un token válido. Verifique la firma y fije los algoritmos aceptados."
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'jwt.decode(..., options={..., "verify_signature": False, ...}, ...)'
+      - pattern: 'jwt.decode(..., verify=False, ...)'
+    metadata:
+      cwe: "CWE-347: Improper Verification of Cryptographic Signature"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+
+  - id: python-debug-mode-enabled
+    message: "Servidor web en modo debug. Expone trazas, variables internas y en Flask una consola interactiva que permite ejecutar código. Desactívelo fuera de desarrollo."
+    severity: WARNING
+    languages: [python]
+    pattern-either:
+      - pattern: '$APP.run(..., debug=True, ...)'
+      - pattern: 'uvicorn.run(..., reload=True, ...)'
+    metadata:
+      cwe: "CWE-489: Active Debug Code"
+      owasp: "A05:2021 - Security Misconfiguration"
+
+  - id: python-weak-hash
+    message: "Hash débil (MD5 o SHA-1) para un uso de seguridad. Use hashlib.sha256 o, para contraseñas, un algoritmo lento (bcrypt, argon2, scrypt). Si no es un uso de seguridad, indíquelo con usedforsecurity=False."
+    severity: WARNING
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: 'hashlib.md5(...)'
+          - pattern: 'hashlib.sha1(...)'
+          - pattern: 'hashlib.new("md5", ...)'
+          - pattern: 'hashlib.new("sha1", ...)'
+      - pattern-not: 'hashlib.$H(..., usedforsecurity=False, ...)'
+      - pattern-not: 'hashlib.new($N, ..., usedforsecurity=False, ...)'
+    metadata:
+      cwe: "CWE-328: Use of Weak Hash"
+      owasp: "A02:2021 - Cryptographic Failures"
+
+  - id: python-insecure-tempfile
+    message: "tempfile.mktemp() crea un nombre de archivo sin abrirlo, lo que permite una carrera entre la comprobación y el uso. Use tempfile.NamedTemporaryFile o tempfile.mkstemp."
+    severity: WARNING
+    languages: [python]
+    pattern: 'tempfile.mktemp(...)'
+    metadata:
+      cwe: "CWE-377: Insecure Temporary File"
+
+  - id: python-hardcoded-secret-key
+    message: "Clave secreta escrita en el código (SECRET_KEY, JWT_SECRET, etc.). Léala desde una variable de entorno o un gestor de secretos."
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: '$KEY = "..."'
+          - pattern: '$APP.config["$KEY"] = "..."'
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: '(?i)^(SECRET_KEY|JWT_SECRET(_KEY)?|API_SECRET|PRIVATE_KEY)$'
+    metadata:
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 - Identification and Authentication Failures"

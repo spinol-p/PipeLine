@@ -1,0 +1,19 @@
+extends: ["spectral:oas"]
+rules:
+  operation-description:
+    description: "Cada operación debe tener una descripción clara de su propósito de negocio."
+    severity: warn
+    recommended: true
+    given: "$.paths.*[get,post,put,delete,patch]"
+    then:
+      field: description
+      function: truthy
+
+  operation-operationId:
+    description: "Cada operación debe tener un operationId único para generación de clientes y telemetría."
+    severity: error
+    recommended: true
+    given: "$.paths.*[get,post,put,delete,patch]"
+    then:
+      field: operationId
+      function: truthy
